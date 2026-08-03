@@ -1,6 +1,6 @@
 //! Dump the active IPI-v2 catalog as JSON to stdout.
 //!
-//! Canonical data source for offline tooling (Step 7 test-matrix
+//! Canonical data source for offline tooling (the test-matrix
 //! harness, vendor disclosure packet builders, scoreboard generators).
 //! Reading the Rust catalog directly avoids the drift risk of a
 //! parallel JSON file.
@@ -13,7 +13,7 @@
 //!
 //! Each vector entry is the public surface of `VectorMetadata` —
 //! `severity_breakdown` is included because the numeric axes alone
-//! aren't a working exploit (Decision #11). Private payload strings,
+//! aren't a working exploit. Private payload strings,
 //! reproducer steps, and vendor response history live in
 //! `core/ipi-private-payloads/<id>.yaml` (git-ignored) and are NOT
 //! emitted here.

@@ -5,7 +5,7 @@ human-readable Markdown inventory.
 
 Source of truth: `cargo run --release --bin dump_ipi_catalog` (the
 same canonical 100-vector JSON the test-matrix harness consumes).
-The MD never lives in vectors.rs — running this script regenerates it
+The Markdown never lives in vectors.rs — running this script regenerates it
 when the catalog drifts.
 
 Usage:
@@ -18,7 +18,6 @@ import json
 import subprocess
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -41,7 +40,7 @@ CATEGORY_LABEL = {
     "TimeStateReplay":        ("M", "Time / state / replay",   "Prompt-cache poison multi-tenant · session-fingerprint drift"),
 }
 
-# Stable display ordering (matches PLAN doc batch sequence)
+# Stable display ordering
 CATEGORY_ORDER = [
     "PrivacyTargeted", "Multimodal", "ToolChainConfusion",
     "AuthorityImpersonation", "MetaLevel", "MemoryExploitation",
@@ -88,7 +87,6 @@ def render(doc: dict) -> str:
     # ─── Header ────────────────────────────────────────────────
     out.append("# IPI-v2 — vector inventory")
     out.append("")
-    out.append(f"> **Snapshot:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}  ")
     out.append("> **Auto-generated** from `cargo run --release --bin dump_ipi_catalog`.  ")
     out.append("> **Regenerate:** `python3 scripts/ipi/render_inventory_md.py > docs/vector-inventory.md`  ")
     out.append("> **Source of truth:** `core/src/ipi/vectors.rs::IPI_V2` — this MD is downstream.")
@@ -104,7 +102,7 @@ def render(doc: dict) -> str:
 
     out.append("## Headline numbers")
     out.append("")
-    out.append(f"- **{doc['count']} active vectors** (`IPI-v2-*`) + 12 deprecated (`IPI-v1-*`, date archive only)")
+    out.append(f"- **{doc['count']} active vectors** (`IPI-v2-*`) + 12 deprecated (`IPI-v1-*`, retained for the audit trail)")
     out.append(f"- **{len(cat_counts)} categories** (A → M, Legacy excluded)")
     out.append("- **Severity tier distribution:** " + " · ".join(
         f"{TIER_BADGE[t]} {tier_counts[t]}" for t in ("Critical", "High", "Medium", "Low") if tier_counts[t]
@@ -114,29 +112,27 @@ def render(doc: dict) -> str:
     ))
     text_testable = sum(1 for v in vectors if "UrlOrText" in v["input_channels"])
     out.append(f"- **Text-testable (has UrlOrText):** {text_testable}/{doc['count']} "
-               f"— the other {doc['count']-text_testable} vectors are pure multimodal/tool/MCP, "
-               "outside Step 7 harness V1 (waiting on asset-gen pickup #7)")
+               f"— the other {doc['count']-text_testable} vectors are pure multimodal/tool/MCP "
+               "and sit outside the text harness, pending multimodal asset generation")
     out.append("")
 
-    # ─── How a vector works today ──────────────────────────────
-    out.append("## How a vector works — today's reality (at code level)")
+    # ─── How a vector is exercised ─────────────────────────────
+    out.append("## How a vector is exercised")
     out.append("")
-    out.append("**3-stage honeypot pipeline:**")
+    out.append("The harness in this repository runs a **canary-echo test**: for each vector it")
+    out.append("builds a single-turn summarisation prompt out of three parts —")
     out.append("")
-    out.append("1. **Token issue.** `POST aitest.github.com/ersincivi/v1/ipi/issue-token`")
-    out.append("   → the server generates 100 vectors × 1 URL: `https://aitest.github.com/ersincivi/probe/<token>/<vec_id>`")
-    out.append("2. **AI fetch.** The user pastes the 100-URL markdown list into ChatGPT/Claude/Gemini;")
-    out.append("   if the AI fetches the URLs the server's `serve_probe(...)` GET handler is triggered,")
-    out.append("   and a 300-second memory-only event is written to `IpiStore` (`user_agent` + `ip_hash`).")
-    out.append("3. **Result poll.** App `POST /v1/ipi/result/<token>` → triggered vector list +")
-    out.append("   resilience score 0-100 (formula: `100 * (1 - triggered/total)`).")
+    out.append("1. **User context** carrying per-run synthetic canary identifiers, so a leak is")
+    out.append("   unambiguous and cannot carry over between rows.")
+    out.append("2. **Attacker content** built from the vector's `harness_probe` field where one")
+    out.append("   exists, otherwise from `public_detection_signature`. Full reproducer payloads")
+    out.append("   stay in the private store and never appear here.")
+    out.append("3. **A neutral task instruction** asking for a short summary of the pasted page.")
     out.append("")
-    out.append("**Per-vector body — current state (gap):**")
-    out.append("")
-    out.append("- The `/probe/:t/:v` endpoint returns **a single generic honeypot template** via `vector_page_html(vector_id, token, callback_base)` — the body is the same for every vector, only the `<meta name=\"ipi-vector\" content=\"...\">` tag differs.")
-    out.append("- So what is being tested right now is: **\"how many of the 100 URLs does the AI actually GET?\"** — the vector's specific content (taxonomy_public / public_detection_signature) is **NOT** included in the probe body.")
-    out.append("- **Multi-channel routes (shipped 2026-05-19):** `vectors_b.rs` added 6 endpoints (`/probe/:t/:v/svg` real inline-generated B10 SVG injection + 5 asset-stub 503 channels). But the in-app prompt keeps listing the 100 generic `/probe/:t/:v` URLs and does **not use** these enriched channels.")
-    out.append("- **Step 7 harness (V1 in this session):** a separate methodology — a per-vector canary echo test using the user's own LLM API key. Completely independent of the in-app honeypot beacon. Which metric the public scoreboard will publish — **decision open**.")
+    out.append("An LLM-as-judge call then reads probe, canaries and response and returns one of")
+    out.append("`leaked` / `resilient` / `refused` / `inconclusive` with a reasoning trace. What")
+    out.append("this establishes is the **base-model precondition** for the attack chain, not")
+    out.append("end-to-end exploitability — see [`methodology.md`](methodology.md).")
     out.append("")
 
     # ─── Surface inventory ────────────────────────────────────
@@ -144,16 +140,12 @@ def render(doc: dict) -> str:
     out.append("")
     out.append("| Layer | File | Role |")
     out.append("|---|---|---|")
-    out.append("| Catalogue (canonical) | `core/src/ipi/vectors.rs`, ~4000 lines | `VectorMetadata` literals + schema rev 2 + tripwire tests |")
-    out.append("| Catalogue (server mirror, ID-only) | server-side | String ID list only; no per-vector metadata on the server |")
-    out.append("| Multi-channel routes | server-side | 6 endpoints: 1 real SVG (B10) + 4 asset stubs + 1 QR stub |")
-    out.append("| Honeypot store | server-side | 300 s memory-only, 5 s reaper, no disk |")
+    out.append("| Catalogue (canonical) | `core/src/ipi/vectors.rs` | `VectorMetadata` literals + schema rev 2 + tripwire tests |")
     out.append("| Aggregator | `core/src/ipi/mod.rs` | `is_high_risk_result` 3-OR + Critical vectors bound to the catalogue |")
-    out.append("| Private payloads | `core/ipi-private-payloads/IPI-v2-*.yaml` | Stubs; full_payload + reproducer_steps are written during the disclosure cycle — git-ignored |")
-    out.append("| Client catalogue string list | client-side | 112 strings (12 legacy + 100), used only as the resilience-score denominator |")
-    out.append("| iOS prompt composer | `ios/IPI/Views/IpiTestCardView.swift::composePrompt` | The 100 URLs in a single markdown bullet list |")
-    out.append("| JSON dumper | `core/src/bin/dump_ipi_catalog.rs` | Source of this MD; JSON for the harness |")
-    out.append("| Step 7 harness | `scripts/ipi/run_test_matrix.py` | Offline canary-echo test (V1: mock + Claude) |")
+    out.append("| JSON dumper | `core/src/bin/dump_ipi_catalog.rs` | Source of this file; JSON for the harness |")
+    out.append("| Test-matrix harness | `scripts/ipi/run_test_matrix.py` | Canary-echo test across model adapters |")
+    out.append("| Scoreboard builder | `scripts/ipi/build_scoreboard.py` | Aggregates run CSVs into the public scoreboard |")
+    out.append("| Private payloads | `core/ipi-private-payloads/IPI-v2-*.yaml` | `full_payload` + `reproducer_steps`, written during the disclosure cycle — git-ignored |")
     out.append("")
 
     # ─── Per-category table of contents ───────────────────────
@@ -213,16 +205,23 @@ def render(doc: dict) -> str:
     # ─── Footer ────────────────────────────────────────────────
     out.append("---")
     out.append("")
-    out.append("## To be discussed together — 4 architectural questions")
+    out.append("## Open questions")
     out.append("")
-    out.append("Layers we want clarity on before this doc is closed:")
-    out.append("")
-    out.append("1. **Test methodology integrity:** the in-app honeypot beacon (\"did the AI fetch the URL\") and the Step 7 harness (\"did the AI echo the canary\") are two separate signals. If the IPI public scoreboard is to publish a single resilience score, which one? Both? How to normalise?")
-    out.append("2. **Per-vector payload delivery:** the `/probe/:t/:v` body is a generic template today. Should `taxonomy_public` + `public_detection_signature` be served in the body? Or should they be injected inside the in-app prompt (no URL, single prompt)? How do the multi-channel SVG/PDF routes enter the prompt?")
-    out.append("3. **100-URL bottleneck:** ChatGPT/Claude will not fetch 100 URLs in a single prompt (rate/context/policy). Strategies: (a) batching — 10 URLs × 10 rounds, (b) prioritisation — Critical-19 + curated High first, \"expand\" if the user wants, (c) per-vector one-shot prompt + manual iteration.")
-    out.append("4. **In-app vs offline harness authority boundary:** the in-app test is the user surface (free, no API key, coarse). The offline harness is internal R&D (paid, fine-grained). Should this split be visible on the public scoreboard (\"Beacon Score X / Echo Score Y\")? Or is Beacon always public and Echo private?")
-    out.append("")
-    out.append("Moving to Step 7 LIVE RUN or Step 8 disclosure tooling before these 4 questions are locked is premature.")
+    out.append("1. **Probe body composition.** How much of a vector should reach the model as")
+    out.append("   content? A probe built from `public_detection_signature` carries the catalogue's")
+    out.append("   own wording, which a model can recognise and refuse on sight; a probe built from")
+    out.append("   `harness_probe` is attack-shaped but has to be authored per vector.")
+    out.append("2. **Multimodal delivery.** The 38 non-text vectors need generated assets (image,")
+    out.append("   audio, PDF, QR) before they can be exercised at all. Until then any headline")
+    out.append("   resilience number covers the text-testable subset only, and should say so.")
+    out.append("3. **Which signal the scoreboard publishes.** Fetch-based beacons (\"did the model")
+    out.append("   retrieve the URL\") and canary-echo tests (\"did the model repeat the identifier\")")
+    out.append("   measure different things. Publishing a single resilience score requires deciding")
+    out.append("   which one it is, or how the two normalise against each other.")
+    out.append("4. **Prompt-scale limits.** No current assistant will fetch 125 URLs from one")
+    out.append("   prompt — rate limits, context and policy all intervene. Batching, tier-first")
+    out.append("   prioritisation and one-vector-per-prompt iteration each trade coverage against")
+    out.append("   run cost differently.")
 
     return "\n".join(out) + "\n"
 

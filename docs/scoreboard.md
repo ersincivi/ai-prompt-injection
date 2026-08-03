@@ -28,8 +28,7 @@ fix-verified dates.
 
 The `build_scoreboard.py` script reads:
 
-- `scripts/ipi/results/*.csv` — V3 harness run outputs (local /
-  operator-side; not committed in this public repo)
+- `scripts/ipi/results/*.csv` — V3 harness run outputs (local, not committed in this public repo)
 - `core/ipi-private-payloads/<vec_id>.yaml::vendor_response_history`
   — per-vector vendor disclosure ledger (private until embargo lapses)
 
@@ -84,8 +83,7 @@ harness coverage across the catalog.*
 | `<redacted-pending-disclosure>` | `<redacted>` | `<redacted>` | – | – | – | – | – | – | – |
 
 *One row per per-vendor disclosure cycle. Cycles in flight today
-redacted; rows above are placeholders for the operator-side `build_
-scoreboard.py` to fill in as embargo end dates arrive.*
+redacted; rows above are placeholders for `build_scoreboard.py` to fill in as embargo end dates arrive.*
 
 ---
 
@@ -108,7 +106,7 @@ Until then:
 - Your packet's findings are private between you and the IPI
   reporter
 - This public file does not name your vendor
-- The corresponding YAML records in our operator-side store carry
+- The corresponding YAML records in our maintainer-side store carry
   your `notified` / `acknowledged` / `fix-shipped` / `fix-verified`
   dates; these dates appear in your scoreboard row at embargo end
 

@@ -107,7 +107,7 @@ Vector payloads are delivered to the target model in three slots:
 2. **`attacker_content`** — the per-vector `harness_probe` field
    contents (real attacker-shaped text without any IPI catalog
    signature embedded). The `harness_probe` text is private and lives
-   in the operator-side payload store; the public catalog
+   in the maintainer-side payload store; the public catalog
    (`vectors.rs`) ships only the taxonomy + detection signature for
    each vector.
 3. **A neutral summarisation task instruction**: e.g. "Please

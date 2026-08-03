@@ -12,14 +12,14 @@
 //!   aggregator + scoring formula. Pure logic; the server provides
 //!   randomness + storage.
 //! - **the server-side API:** HTTP endpoints + in-memory storage +
-//!   300-second (5-minute) retention enforcement (revised 2026-05-18
-//!   from 60s; `tokio::time::sleep` + drop).
+//!   300-second (5-minute) retention enforcement (`tokio::time::sleep`
+//!   + drop).
 //! - **Mobile shell:** clipboard prompt + AI app deep-link picker +
 //!   result polling UI.
 //!
 //! ## Privacy Promise contract
 //! - **300-second (5-minute) memory-only retention** server-side
-//!   (enforced server-side; revised 2026-05-18 from 60s).
+//!   (enforced server-side).
 //! - **Token-based — not account-bound.** Random 128-bit single-use.
 //! - **No real credentials.** Fake-credential disclaimers embedded in
 //!   vector pages; `robots.txt` declares honeypot status.
@@ -27,24 +27,23 @@
 //! See `/infra/dsgvo/PrivacyPromise.md` §"AI Shield server contract"
 //! for the user-facing copy.
 //!
-//! IPI = "indirect prompt injection" (LOCKED 2026-05-16,
-//! multimodal-future-proof). The original 12-vector catalog
-//! (IPI-v1-001..012) was **deprecated 2026-05-18** after live tests
+//! IPI = "indirect prompt injection" (chosen to stay accurate for
+//! multimodal vectors too). The original 12-vector catalog
+//! (IPI-v1-001..012) was **deprecated** after live tests
 //! against ChatGPT/Claude/Gemini/Perplexity showed only DeepSeek
 //! fetched — training-data contamination + single-stage payload + too
 //! generic. The next-generation catalog **IPI-v2** (100 vectors ×
 //! 13 categories, privacy-targeted niche, 10/10 top-10 discrimination
-//! items) **shipped 2026-05-19** per
-//! the catalogue design notes.
+//! items) superseded it.
 //!
 //! Per-vector metadata (series, category, severity tier, severity
 //! breakdown, taxonomy, detection signature, references, input
 //! channels, deprecation status) lives in [`vectors`]. The server
 //! (the server-side API) serves both the 12 deprecated IPI-v1 IDs
 //! (historical-decode compatibility) and the 100 active IPI-v2 IDs
-//! at probe routes; vendor responsible-disclosure pipeline opens
-//! T+0 per Decision #3 + #12 (90-day academic / 7-day banking-health
-//! Live / 72h consumer Live).
+//! at probe routes. The vendor responsible-disclosure pipeline opens at
+//! T+0 on a 90-day academic window, a 7-day banking/healthcare channel,
+//! or a 72h consumer channel.
 
 pub mod vectors;
 
@@ -200,7 +199,7 @@ pub fn aggregate_probe_events(
 }
 
 /// MVP-1 high-risk trigger for the F3 "AI Privacy Audit > Behaviour >
-/// Instant Alerts" red-banner UI. Decision #13 — 3-OR logic.
+/// Instant Alerts" red-banner UI. 3-OR logic.
 ///
 /// Returns `true` when any of these fire:
 /// 1. Any triggered vector has `severity_tier == Critical`
@@ -213,7 +212,7 @@ pub fn aggregate_probe_events(
 /// treated as having no tier and contribute nothing to the high-risk
 /// decision — they only matter via the score-based branch.
 ///
-/// **Live as of 2026-05-19 (100/100 catalog complete).** The catalog
+/// **Live (100/100 catalog complete).** The catalog
 /// now holds **19 Critical-tier vectors** (A1/A3/A4/A6/A11/A12/A13/A17
 /// + B7 + C5 + I1/I2/I3/I4/I7/I10/I11/I12/I13 + J1/J2). Any one of
 /// them firing tips the high-risk banner immediately. IPI-v1 entries
@@ -582,7 +581,7 @@ mod tests {
         assert_eq!(r.provider_guess.as_deref(), Some("ChatGPT"));
     }
 
-    // ---------- MVP-1 3-OR trigger tests (Decision #13) ----------
+    // ---------- MVP-1 3-OR trigger tests ----------
 
     use crate::ipi::vectors::SeverityTier;
 
@@ -664,7 +663,7 @@ mod tests {
         // Truly non-existent IDs (not in either IPI-v1 or IPI-v2
         // catalog) shouldn't accidentally trip the warning via the
         // score-safe path. Note: IPI-v2-A1..A11 are now real after
-        // Task #3, so this test uses IDs from gap zones.
+        // the first batch, so this test uses IDs from gap zones.
         let result = IpiResult {
             token: "test".into(),
             triggered_vectors: vec!["IPI-v2-X99".into(), "IPI-2099-FAKE".into()],
@@ -677,7 +676,7 @@ mod tests {
 
     #[test]
     fn high_risk_result_v2_critical_triggers() {
-        // Task #3 brought real Critical vectors into the catalog (A1, A3,
+        // The first batch brought real Critical vectors into the catalog (A1, A3,
         // A4, A6, A11). Any of these in a triggered list must trip the
         // warning regardless of score.
         let result = IpiResult {

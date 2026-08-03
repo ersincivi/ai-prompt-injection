@@ -5,26 +5,24 @@
 //!
 //! Two series live side by side:
 //! - **IPI-v1-001..012** — the original catalog. Now marked
-//!   `deprecated = true` (2026-05-18) after live-AI tests showed
+//!   `deprecated = true` after live-AI tests showed
 //!   training-data contamination, single-stage payload, and generic
 //!   framing made the catalog ineffective against modern providers.
 //!   IDs retained for academic audit trail (any historical run can
 //!   still cite them).
-//! - **IPI-v2-***  — the IPI-v2 catalogue, **🎯 100/100 CATALOG
-//!   COMPLETE 2026-05-19** per
-//!   the catalogue design notes
-//!   and the expansion research notes.
+//! - **IPI-v2-***  — the IPI-v2 catalogue, complete at 100/100 when the
+//!   series was first published.
 //!   **100 vectors × 13 categories** — 8 original (A Privacy-targeted,
 //!   B Multimodal, C Tool-chain confusion, D Authority impersonation,
 //!   E Meta-level, F Memory exploitation, G Indirect chain, H Citation
 //!   forgery) + 5 new (I Agentic & MCP, J Embedded/domain-specific,
 //!   K Cross-AI cascade, L Adversarial encoding, M Time/state/replay).
-//!   Vectors enter vendor disclosure pipeline per Decision #3 + #12
-//!   (90-day academic window; 7-day banking/healthcare Live channel;
-//!   72h consumer Live channel).
+//!   Vectors enter the vendor disclosure pipeline on a 90-day academic
+//!   window, a 7-day banking/healthcare channel, or a 72h consumer
+//!   channel, depending on the surface.
 //!
-//! Schema (Decision #11 — internal rubric, no external standard
-//! adaptation): every vector exposes a public `severity_tier` summary +
+//! Schema (an internal rubric, not an adaptation of an external
+//! standard): every vector exposes a public `severity_tier` summary +
 //! a private `severity_breakdown` (4-axis 1-4). Public consumers see
 //! the tier only; the full breakdown is bundled in vendor disclosure
 //! packages. **Formula is intentionally absent** — formula would be a
@@ -37,8 +35,7 @@
 //! deterministically.
 //!
 //! The server keeps its own catalogue copy intentionally
-//! (no `/core` path dep — see memory `faz14-5-ai-shield-locked.md`
-//! decision #1). The server copy mirrors the
+//! (no `/core` path dep). The server copy mirrors the
 //! `active_ids()` output of this module — i.e. only non-deprecated
 //! vectors are eligible for server probe routes.
 
@@ -52,7 +49,7 @@ pub enum VectorSeries {
     IpiV2,
 }
 
-/// Vector taxonomy. 13 categories per PLAN doc §3.1 expansion (2026-05-19);
+/// Vector taxonomy. 13 categories;
 /// `Legacy` is the bucket for IPI-v1 IDs (which predate the taxonomy).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VectorCategory {
@@ -95,7 +92,7 @@ pub enum VectorCategory {
     /// internal-memo screenshot, fake "already public" claim. 5 vectors
     /// planned (H1-H5).
     CitationForgery,
-    /// **I** — Agentic & MCP ecosystem (NEW 2026-05-19). MCP server
+    /// **I** — Agentic & MCP ecosystem. MCP server
     /// squatting, tool-shadowing, tool-description backdoor injection,
     /// Computer Use OCR re-injection, browser-agent DOM injection,
     /// allowlist scope creep, memory-tool poisoning, cross-MCP credential
@@ -104,34 +101,34 @@ pub enum VectorCategory {
     /// sandbox escape. 13 vectors planned (I1-I13). The centre of the
     /// IPI niche; brand-aligned mega.
     Agentic,
-    /// **J** — Embedded/domain-specific (NEW 2026-05-19). Banking-AI
+    /// **J** — Embedded/domain-specific. Banking-AI
     /// transaction-confirmation hijack, medical-AI patient-history
     /// smuggling (Zenity-class), voice-assistant cross-app intent
     /// confusion, IDE/coding-AI source-file PII leak, customer-support
     /// AI grievance-escalation pretext. 5 vectors planned (J1-J5).
     /// DACH banking + healthcare market alignment.
     EmbeddedDomain,
-    /// **K** — Cross-AI cascade (NEW 2026-05-19). LLM-to-LLM relay
+    /// **K** — Cross-AI cascade. LLM-to-LLM relay
     /// poisoning, RAG-embedding poisoning, judge-model deception
     /// (JudgeDeceiver). 3 vectors planned (K1-K3). Frontier whitespace;
     /// only 3-4 academic papers as of 2026.
     CrossAiCascade,
-    /// **L** — Adversarial encoding & obfuscation (NEW 2026-05-19).
+    /// **L** — Adversarial encoding & obfuscation.
     /// Multi-language code-switching, cipher-encoded payload (ROT13/
     /// Caesar), RTL-override bidi confusion. 3 vectors planned (L1-L3).
     AdversarialEncoding,
-    /// **M** — Time/state/replay (NEW 2026-05-19). Prompt-cache
+    /// **M** — Time/state/replay. Prompt-cache
     /// poisoning (multi-tenant), session-fingerprint drift over long
     /// conversation. 2 vectors planned (M1-M2). Emerging category;
     /// IPI opens the taxonomy.
     TimeStateReplay,
 }
 
-/// Severity tier — Decision #5 + #11.
+/// Severity tier.
 ///
-/// Public-facing summary; no numeric score. Decision #11 (2026-05-18
-/// evening) rejected external rubric adaptation (CVSS-LLM-Privacy /
-/// OWASP DREAD) — IPI uses its own internal 4-axis [`SeverityBreakdown`]
+/// Public-facing summary; no numeric score. Adapting an external rubric
+/// (CVSS-LLM-Privacy, OWASP DREAD) was considered and rejected — IPI uses
+/// its own internal 4-axis [`SeverityBreakdown`]
 /// to assign the tier, but **never publishes** the breakdown formula.
 /// Formula would be a public exploit recipe.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -142,7 +139,7 @@ pub enum SeverityTier {
     Critical,
 }
 
-/// Internal 4-axis severity breakdown (Decision #11).
+/// Internal 4-axis severity breakdown.
 ///
 /// **All fields are 1-4 integers.** Each axis is qualitative — no
 /// arithmetic formula combines them into the tier. The catalog editor
@@ -196,8 +193,7 @@ impl SeverityBreakdown {
 /// vector may have both a URL-summarisation form and a PDF-upload
 /// form, each tested separately).
 ///
-/// Decision #13 priority: first batch URL/text + PDF in parallel,
-/// image/audio in the next batch.
+/// Priority: URL/text and PDF first, in parallel; image and audio next.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InputChannel {
     /// User pastes URL or free text into an open-ended chat AI.
@@ -224,10 +220,10 @@ pub enum InputChannel {
 /// Static catalog entry. All fields are immutable string references so
 /// the catalog lives in `.rodata` with zero allocation cost.
 ///
-/// Schema rev 2 (2026-05-19, Decision #11 + #12): adds the 4-axis
+/// Schema rev 2 adds the 4-axis
 /// `severity_breakdown`, the public `taxonomy_public` / `detection
-/// _signature` / `announcement_template` triplet (Decision #5), the
-/// `references` link list, and `input_channels` (Decision #13).
+/// _signature` / `announcement_template` triplet, the
+/// `references` link list, and `input_channels`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct VectorMetadata {
     /// Canonical ID, e.g. `"IPI-v1-001"` or `"IPI-v2-A1"`.
@@ -238,19 +234,18 @@ pub struct VectorMetadata {
     /// holistically given the `severity_breakdown` axes.
     pub severity_tier: SeverityTier,
     /// 4-axis internal breakdown. Travels in vendor disclosure packets,
-    /// NOT in public scoreboard / annual report (Decision #11).
+    /// NOT in public scoreboard / annual report.
     pub severity_breakdown: SeverityBreakdown,
     /// Vendor-agnostic 1-2 sentence category description, safe to
     /// publish on the public scoreboard. No specific payload, no
-    /// vendor names, no reproducer. Decision #5 — `taxonomy_public`.
+    /// vendor names, no reproducer.
     pub taxonomy_public: &'static str,
     /// Vendor-agnostic generic detection signature. Pattern that lets
     /// a vendor or third-party safety researcher recognise the family
-    /// without leaking the specific exploit. Decision #5 — public.
+    /// without leaking the specific exploit. Public.
     pub public_detection_signature: &'static str,
     /// Post-90-day-embargo high-level public copy, vendor-agnostic.
-    /// Used by the press kit + scoreboard advisory rows. Decision #5
-    /// — `announcement_template`.
+    /// Used by the press kit + scoreboard advisory rows.
     pub announcement_template: &'static str,
     /// Academic + industry citations supporting the vector's
     /// taxonomy. Strings rendered verbatim on the scoreboard.
@@ -267,17 +262,17 @@ pub struct VectorMetadata {
     pub deprecation_reason: Option<&'static str>,
 }
 
-/// 2026-05-18 deprecation rationale, mirrored verbatim in every
+/// Deprecation rationale, mirrored verbatim in every
 /// IPI-v1 entry so any downstream consumer (mobile shell, scoreboard
 /// builder, audit script) surfaces the same text.
 pub const IPI_V1_DEPRECATION_REASON: &str =
     "Training-data contamination + single-stage payload + generic framing made the \
      2026 catalog ineffective against current AI providers (only DeepSeek fetched \
-     during live tests 2026-05-18). Superseded by the IPI-v2 catalogue — privacy-targeted, \
+     during live tests). Superseded by the IPI-v2 catalogue — privacy-targeted, \
      multimodal, meta-level taxonomy. See the catalogue design notes.";
 
-/// IPI-v1-001..012. All entries flagged `deprecated = true` as of
-/// 2026-05-18. Order matches the order pinned in
+/// IPI-v1-001..012. All entries flagged `deprecated = true`.
+/// Order matches the order pinned in
 /// the historical server-side list, for backwards-compat of run results.
 pub const IPI_V1: &[VectorMetadata] = &[
     legacy("IPI-v1-001"),
@@ -294,32 +289,30 @@ pub const IPI_V1: &[VectorMetadata] = &[
     legacy("IPI-v1-012"),
 ];
 
-/// the IPI-v2 catalogue. **🎯 125/125 CATALOG COMPLETE.** All 13 categories
+/// the IPI-v2 catalogue. **125/125 CATALOG COMPLETE.** All 13 categories
 /// shipped — A1-A20 + B1-B21 + C1-C13 + D1-D8 + E1-E10 + F1-F7 + G1-G5
 /// + H1-H5 + I1-I16 + J1-J12 + K1-K3 + L1-L3 + M1-M2 = 125 vectors,
-/// 12 active enum categories (Legacy reserved for IPI-v1), 10/10
-/// top-10 discrimination items shipped (Tasks #3 + #4 + #5 + #7 + #8
-/// + #9 + #11 + #12 + #13 + #14 + #15 + #16 + #17 + #18, 2026-05-19).
-/// **Gap-fill expansion 2026-05-20 (Pickup B):** A19-A20 / B14-B21 /
+/// 12 active enum categories (Legacy reserved for IPI-v1), and all 10
+/// top-10 discrimination items.
+/// **Gap-fill expansion:** A19-A20 / B14-B21 /
 /// C11-C13 / E9-E10 / I14-I16 / J6-J12 = 25 additional vectors
 /// (3 Critical / 15 High / 7 Medium) covering Shadow-AI surfaces
 /// (notifications · calendar · voicemail · clipboard · lock-screen
 /// widgets · auto-captions · SMS summary · Recall passive OCR) and
 /// embedded-AI deepening (banking statement · healthcare appointment /
 /// lab-results · M365 meeting / Slack-Teams thread · e-commerce
-/// review / order tracking) per memory `ipi-consumer-test-design`
-/// L12. IPI-v2 catalog ready for vendor responsible-disclosure
-/// pipeline per PLAN §6 Step 8 (90-day window). No further vectors
-/// planned for the 2027 release; 2028 cycle will rotate IDs per
-/// CVE-style annual cadence (Decision #2).
+/// review / order tracking). The IPI-v2 catalog is ready for the vendor
+/// responsible-disclosure pipeline (90-day window). No further vectors
+/// are planned for the 2027 release; the 2028 cycle rotates IDs on the
+/// CVE-style annual cadence.
 ///
-/// Authoring conventions (Task #1 schema rev 2):
+/// Authoring conventions (schema rev 2):
 /// - `severity_tier` is the public summary; assigned holistically by the
-///   catalog editor given the 4-axis breakdown. No formula (Decision #11).
+///   catalog editor given the 4-axis breakdown. No formula.
 /// - `severity_breakdown` is informational + travels in vendor disclosure
 ///   packets only. Public scoreboard surfaces only the tier.
 /// - `taxonomy_public` is 1-2 sentences, vendor-agnostic, safe to
-///   publish (Decision #5 — `taxonomy_public` field).
+///   publish.
 /// - `public_detection_signature` is a generic pattern, NOT a working
 ///   exploit string. Full payloads live in `ipi-private-payloads/`.
 /// - `announcement_template` is the 90-day-embargo post-disclosure copy.
@@ -674,7 +667,7 @@ pub const IPI_V2: &[VectorMetadata] = &[
         deprecation_reason: None,
     },
     // ═══════════════════════════════════════════════════════════════════
-    // Batch 4d — Privacy expansion A12-A18 (Task #7, 2026-05-19)
+    // Batch 4d — Privacy expansion A12-A18
     // Top-10 discrimination items: A12, A13, A17.
     // ═══════════════════════════════════════════════════════════════════
     // ───────── A12 Markdown image exfiltration via rendered output — Critical (top-10 #4) ─────────
@@ -910,7 +903,7 @@ pub const IPI_V2: &[VectorMetadata] = &[
         deprecation_reason: None,
     },
     // ═══════════════════════════════════════════════════════════════════
-    // Batch 4c — Meta-level E1-E8 (Task #5, 2026-05-19)
+    // Batch 4c — Meta-level E1-E8
     // E1-E5 original + E6-E8 expansion.
     // ═══════════════════════════════════════════════════════════════════
     // ───────── E1 Inverse honeypot abuse — High ─────────
@@ -1171,7 +1164,7 @@ pub const IPI_V2: &[VectorMetadata] = &[
         deprecation_reason: None,
     },
     // ═══════════════════════════════════════════════════════════════════
-    // Batch 4f — Embedded/domain-specific J1-J5 (Task #9, 2026-05-19)
+    // Batch 4f — Embedded/domain-specific J1-J5
     // DACH banking + healthcare market alignment. Top-10: J2.
     // ═══════════════════════════════════════════════════════════════════
     // ───────── J1 Banking-AI transaction-confirmation hijack — Critical ─────────
@@ -1351,7 +1344,7 @@ pub const IPI_V2: &[VectorMetadata] = &[
         deprecation_reason: None,
     },
     // ═══════════════════════════════════════════════════════════════════
-    // Batch 4e — Agentic & MCP I1-I13 (Task #8, 2026-05-19) — the centre of the IPI niche
+    // Batch 4e — Agentic & MCP I1-I13 — the centre of the IPI niche
     // Top-10 items: I1 (#8) · I4 (#3) · I10 (#5) · I11 (#9). 7 Critical + 6 High.
     // ═══════════════════════════════════════════════════════════════════
     // ───────── I1 MCP server squatting — Critical (top-10 #8) ─────────
@@ -4638,10 +4631,10 @@ pub const IPI_V2: &[VectorMetadata] = &[
 const LEGACY_TAXONOMY_PUBLIC: &str =
     "Deprecated IPI-v1 vector; pre-2027 taxonomy. See deprecation_reason for context.";
 
-const LEGACY_DETECTION_SIGNATURE: &str = "n/a — deprecated 2026-05-18";
+const LEGACY_DETECTION_SIGNATURE: &str = "n/a — deprecated";
 
 const LEGACY_ANNOUNCEMENT_TEMPLATE: &str =
-    "Not eligible for vendor disclosure (deprecated 2026-05-18; superseded by the IPI-v2 catalogue).";
+    "Not eligible for vendor disclosure (deprecated; superseded by the IPI-v2 catalogue).";
 
 const LEGACY_REFERENCES: &[&str] = &[];
 
@@ -4681,8 +4674,8 @@ pub fn all_catalog() -> impl Iterator<Item = &'static VectorMetadata> {
 }
 
 /// Find a single entry by ID. Linear scan — the catalog is 137 entries
-/// total (12 deprecated IPI-v1 + 125 active IPI-v2 after Pickup B
-/// gap-fill 2026-05-20). Hashing remains overkill at this size.
+/// total (12 deprecated IPI-v1 + 125 active IPI-v2 after the gap-fill
+/// expansion). Hashing remains overkill at this size.
 pub fn lookup(id: &str) -> Option<&'static VectorMetadata> {
     all_catalog().find(|v| v.id == id)
 }
@@ -4690,7 +4683,7 @@ pub fn lookup(id: &str) -> Option<&'static VectorMetadata> {
 /// IDs that are still eligible to be issued in a fresh IPI test run.
 /// Returns vectors from the catalog with `deprecated == false`.
 ///
-/// As of 2026-05-20 (🎯 125/125 after Pickup B gap-fill) this returns
+/// At 125/125 after the gap-fill expansion, this returns
 /// the 125 active IPI-v2 IDs (A1-A20 + B1-B21 + C1-C13 + D1-D8 +
 /// E1-E10 + F1-F7 + G1-G5 + H1-H5 + I1-I16 + J1-J12 + K1-K3 + L1-L3 +
 /// M1-M2). The 12 deprecated IPI-v1 IDs (still served by the server-side API
@@ -4757,13 +4750,13 @@ mod tests {
 
     #[test]
     fn airi_2027_full_catalog_shipped() {
-        // 🎯 125/125 — all 13 categories shipped + Pickup B gap-fill
-        // (2026-05-20). A1-A20 + B1-B21 + C1-C13 + D1-D8 + E1-E10 +
+        // 125/125 — all 13 categories plus the gap-fill expansion.
+        // A1-A20 + B1-B21 + C1-C13 + D1-D8 + E1-E10 +
         // F1-F7 + G1-G5 + H1-H5 + I1-I16 + J1-J12 + K1-K3 + L1-L3 +
-        // M1-M2 = 125 vectors. Tasks #3-#18 (2026-05-19) shipped the
-        // first 100; Pickup B (2026-05-20) added A19-A20 / B14-B21 /
+        // M1-M2 = 125 vectors. The initial series shipped the first 100;
+        // the gap-fill expansion added A19-A20 / B14-B21 /
         // C11-C13 / E9-E10 / I14-I16 / J6-J12 (Shadow-AI surfaces +
-        // embedded-AI deepening per memory `ipi-consumer-test-design`
+        // embedded-AI deepening
         // L12). Updating this count further means another expansion
         // batch landed — keep changelog in sync with PLAN doc.
         assert_eq!(IPI_V2.len(), 125);
@@ -4821,10 +4814,10 @@ mod tests {
 
     #[test]
     fn airi_2027_top10_b7_unicode_tag_smuggling_present() {
-        // Task #4 brings top-10 discrimination #2 — B7 (Unicode tag-character
+        // Top-10 discrimination #2 — B7 (Unicode tag-character
         // ASCII smuggling). Adds the 9th Critical tier to MVP-1's high-risk
         // banner trigger set.
-        let v = lookup("IPI-v2-B7").expect("B7 must be in catalog after Task #4");
+        let v = lookup("IPI-v2-B7").expect("B7 must be in catalog");
         assert_eq!(v.severity_tier, SeverityTier::Critical);
         assert_eq!(v.category, VectorCategory::Multimodal);
     }
@@ -4841,10 +4834,10 @@ mod tests {
 
     #[test]
     fn airi_2027_top10_c5_mcp_response_injection_present() {
-        // Task #11 brings top-10 discrimination #7 — C5 (MCP server response
+        // Top-10 discrimination #7 — C5 (MCP server response
         // field injection). Completes 10/10 top-10 discrimination coverage
         // (the final outstanding entry from the original priority list).
-        let v = lookup("IPI-v2-C5").expect("C5 must be in catalog after Task #11");
+        let v = lookup("IPI-v2-C5").expect("C5 must be in catalog");
         assert_eq!(v.severity_tier, SeverityTier::Critical);
         assert_eq!(v.category, VectorCategory::ToolChainConfusion);
     }
@@ -4963,8 +4956,8 @@ mod tests {
 
     #[test]
     fn airi_2027_top10_j2_zenity_present() {
-        // Task #9 brings top-10 discrimination #6 — J2 (medical-AI Zenity-class).
-        let v = lookup("IPI-v2-J2").expect("J2 must be in catalog after Task #9");
+        // Top-10 discrimination #6 — J2 (medical-AI Zenity-class).
+        let v = lookup("IPI-v2-J2").expect("J2 must be in catalog");
         assert_eq!(v.severity_tier, SeverityTier::Critical);
         assert_eq!(v.category, VectorCategory::EmbeddedDomain);
     }
@@ -4981,12 +4974,12 @@ mod tests {
 
     #[test]
     fn airi_2027_top10_i_quartet_present() {
-        // Task #8 brings 4 top-10 discrimination items: I1 (#8 MCP squatting),
+        // 4 top-10 discrimination items: I1 (#8 MCP squatting),
         // I4 (#3 Computer Use OCR), I10 (#5 self-modification), I11 (#9
         // parallel-tool merge). All must be Critical.
         let critical_quartet = ["IPI-v2-I1", "IPI-v2-I4", "IPI-v2-I10", "IPI-v2-I11"];
         for id in critical_quartet {
-            let v = lookup(id).expect(&format!("{} must be in catalog after Task #8", id));
+            let v = lookup(id).expect(&format!("{} must be in catalog", id));
             assert_eq!(v.severity_tier, SeverityTier::Critical,
                 "{} must be Critical tier (top-10 discrimination)", id);
             assert_eq!(v.category, VectorCategory::Agentic);
@@ -5006,8 +4999,8 @@ mod tests {
 
     #[test]
     fn airi_2027_top10_discrimination_vectors_present() {
-        // Top-10 discrimination from expansion-research §4 — Task #3 covers
-        // A12, A13, A17 (those are in Task #7 batch); from this batch
+        // Top-10 discrimination — A12, A13 and A17 are covered by the
+        // privacy-expansion batch; from this batch
         // (A1-A11), the top-10 entries are A4 (tool-result poisoning) and
         // A11 (sandbox-PII echo via tool result). Tripwire that they're
         // shipped and Critical.
@@ -5035,7 +5028,7 @@ mod tests {
 
     #[test]
     fn active_ids_returns_only_airi_2027() {
-        // 125/125 catalog (100 original + 25 Pickup B gap-fill 2026-05-20):
+        // 125/125 catalog (100 original + 25 from the gap-fill expansion):
         // A1-A20 + B1-B21 + C1-C13 + D1-D8 + E1-E10 + F1-F7 + G1-G5 + H1-H5
         // + I1-I16 + J1-J12 + K1-K3 + L1-L3 + M1-M2 active = 125 IDs.
         let ids = active_ids();
@@ -5069,12 +5062,12 @@ mod tests {
 
     #[test]
     fn airi_2027_top10_a_expansion_present() {
-        // Task #7 expansion brings 3 top-10 discrimination items:
+        // The privacy expansion brings 3 top-10 discrimination items:
         // A12 (markdown image exfil — #4), A13 (SpAIware memory — #1),
         // A17 (clipboard exfil — #10). Tripwire that they shipped Critical.
         let must_be_critical = ["IPI-v2-A12", "IPI-v2-A13", "IPI-v2-A17"];
         for id in must_be_critical {
-            let v = lookup(id).expect(&format!("{} must be in catalog after Task #7", id));
+            let v = lookup(id).expect(&format!("{} must be in catalog", id));
             assert_eq!(v.severity_tier, SeverityTier::Critical,
                 "{} must be Critical tier (top-10 discrimination)", id);
         }
@@ -5087,7 +5080,7 @@ mod tests {
         assert!(IPI_V1_DEPRECATION_REASON.contains("the IPI-v2 catalogue"));
     }
 
-    // ---------- Schema rev 2 (2026-05-19) tests ----------
+    // ---------- Schema rev 2 tests ----------
 
     #[test]
     fn severity_breakdown_valid_in_range() {
@@ -5175,7 +5168,7 @@ mod tests {
 
     #[test]
     fn new_categories_distinct_from_legacy() {
-        // Tripwire: the 5 new 2026-05-19 expansion categories must be
+        // Tripwire: the 5 expansion categories must be
         // distinct enum variants. If anyone collapses them later (e.g.
         // "Agentic = ToolChainConfusion"), this test fails.
         let new_categories = [

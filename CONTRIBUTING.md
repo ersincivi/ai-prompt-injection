@@ -25,7 +25,7 @@ Per-vector proposals should include:
   justifications
 
 We will not accept private payload / reproducer content in public
-Issues (that lives in the operator-side private payload store and is
+Issues (that lives in the maintainer-side private payload store and is
 authored only as part of a coordinated disclosure cycle).
 
 ### 2. Harness improvements
@@ -70,7 +70,7 @@ consumers outside the project's home region. PRs for translations of
 - **Direct prompt injection / jailbreak / alignment debate** content
   (out of IPI scope — see [`docs/methodology.md`](docs/methodology.md))
 - **Private payload / reproducer text** in public Issues / PRs
-  (private payload store is operator-side)
+  (the private payload store is maintainer-side)
 - **End-to-end exploit proof-of-concept** against named vendor
   production surfaces (IPI measurement stops at the base-model
   precondition)

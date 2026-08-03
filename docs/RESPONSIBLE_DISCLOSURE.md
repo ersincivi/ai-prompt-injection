@@ -3,7 +3,7 @@
 > This document describes how the IPI project handles IPI-class
 > findings when reporting them to affected vendors. For the
 > reverse — how to report security findings against IPI itself —
-> see [`/SECURITY.md`](../../SECURITY.md).
+> see [`SECURITY.md`](../SECURITY.md).
 
 ## Cycle overview
 
@@ -112,10 +112,9 @@ are documented:
   exploitation risk in a deployed banking-AI or healthcare-AI
   surface. Triggered case-by-case; default remains 90-day.
 - **Consumer-facing AI assistant findings** with active production
-  exploitation evidence: **72-hour Live** consideration applies
-  per the original IPI catalogue Decision #12. As above, default
-  remains 90-day; the 72-hour path requires evidence of active
-  exploitation in the wild.
+  exploitation evidence: **72-hour Live** consideration applies. As
+  above, the default remains 90-day; the 72-hour path requires
+  evidence of active exploitation in the wild.
 
 In both override cases, the IPI team consults with the affected
 vendor on the appropriate timeline before locking the embargo
@@ -139,17 +138,17 @@ At embargo end (per-vendor "Day-0"):
 
 ## How IPI tracks responses
 
-Per-vector YAML records in the operator-side private store carry a
+Per-vector YAML records in the maintainer-side private store carry a
 `vendor_response_history` field:
 
 ```yaml
 vendor_response_history:
-  - vendor: openai
-    notified: 2026-05-20
-    embargo_end: 2026-08-18
-    acknowledged: 2026-06-02
-    fix_shipped: 2026-07-15
-    fix_verified: 2026-07-20
+  - vendor: <vendor-id>
+    notified: YYYY-MM-DD
+    embargo_end: YYYY-MM-DD
+    acknowledged: YYYY-MM-DD
+    fix_shipped: YYYY-MM-DD
+    fix_verified: YYYY-MM-DD
 ```
 
 These records ship as part of the scoreboard row when embargo
@@ -160,7 +159,7 @@ disclosure cycle has completed for that vector + vendor pair.
 
 If you are a security researcher who discovers an IPI-class
 finding independently, the recommended workflow is documented in
-[`/SECURITY.md`](../../SECURITY.md) §"Reporting IPI-class findings".
+[`SECURITY.md`](../SECURITY.md) §"Reporting IPI-class findings".
 Highlights:
 
 1. Send the finding **directly to the vendor** via their published

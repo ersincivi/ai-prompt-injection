@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-build_scoreboard.py — IPI Step 10 public scoreboard aggregator.
+build_scoreboard.py — the IPI public scoreboard aggregator.
 
 Reads every CSV in `scripts/ipi/results/` and emits a vendor-agnostic
 public scoreboard at `docs/scoreboard.md`. Vendor names appear
-ONLY in rows whose embargo has lapsed (per Decision #5 + #12) — others
+only in rows whose embargo has lapsed — others
 show `<redacted-pending-disclosure>`.
 
 ## Aggregation shape
@@ -24,7 +24,7 @@ exact app (e.g. "Vendor X iOS app build 4.2.1 + Vendor X chatbot").
 Embargo lapsed → vendor name surfaces with verdict.
 Embargo active → row shows `<redacted-pending-disclosure>`.
 
-We do NOT track per-vendor disclosure timestamps in CSVs — that lives
+We do not track per-vendor disclosure timestamps in CSVs — that lives
 in `core/ipi-private-payloads/<id>.yaml::vendor_response_history`.
 This script's --include-redacted flag controls whether pending rows
 appear at all in the scoreboard preview.
@@ -60,7 +60,7 @@ RESULTS_DIR = REPO_ROOT / "scripts" / "ipi" / "results"
 DEFAULT_OUT = REPO_ROOT / "docs" / "release" / "scoreboard.md"
 
 
-# Default per-category embargo length (days). Decision #12.
+# Default per-category embargo length (days).
 EMBARGO_DAYS_DEFAULT = 90
 EMBARGO_DAYS_BY_CATEGORY = {
     # Banking + healthcare Live channel
@@ -227,10 +227,10 @@ def render_markdown(
         f"**Source:** {n_csvs} CSV run(s) · {n_rows} row(s)"
     )
     lines.append(">")
-    lines.append("> Vendor-agnostic by default. Vendor names surface only after the 90-day embargo lapses (or 7 days for banking/health, 72 hours for consumer Live channel — Decision #12).")
+    lines.append("> Vendor-agnostic by default. Vendor names surface only after the 90-day embargo lapses (or 7 days for banking/health, 72 hours for consumer Live channel).")
     lines.append(">")
     lines.append(
-        "> The scoreboard publishes **app-AI pairs** (Decision #12) — not raw LLMs. "
+        "> The scoreboard publishes **app-AI pairs** — not raw LLMs. "
         "When per-run app metadata wiring lands, each row identifies a specific "
         "consumer-facing product (e.g. *Vendor X iOS chatbot v4.2*); until then "
         "rows are labelled by adapter family."
@@ -288,17 +288,16 @@ def render_markdown(
     lines.append("## Caveats")
     lines.append("")
     lines.append("1. **Preview data.** This scoreboard is bootstrapping. Currently rows show one model family; multi-vendor parity comes when OpenAI / Gemini / Perplexity / Mistral adapters land (V2 harness roadmap).")
-    lines.append("2. **Text-testable subset only.** Multimodal vectors (Image / Audio / PDF / QR / EXIF) await PLAN §6 #7 (real asset generation pipeline). The denominator above counts the text-testable rows actually exercised in each run.")
+    lines.append("2. **Text-testable subset only.** Multimodal vectors (Image / Audio / PDF / QR / EXIF) await the multimodal asset-generation work. The denominator above counts the text-testable rows actually exercised in each run.")
     lines.append("3. **Single-turn probe shape.** Real agentic attacks (Computer Use OCR, Operator browse, MCP memory-poisoning across sessions) need session-scoped probes — different harness shape. The scoreboard currently reflects single-turn summarisation only.")
     lines.append("4. **Judge can be wrong.** LLM-as-judge has its own false-positive / false-negative profile. We publish judge verdicts because they materially outperform heuristic regex (see the methodology notes on the canary-substring false-positive case), but they aren't ground truth.")
     lines.append("5. **App-AI pair labelling.** Until the per-run app manifest lands, the rows here are LLM-family labelled. The eventual scoreboard label will name the specific app (e.g. \"Vendor X banking iOS app v4.2 + Vendor Y assistant\").")
     lines.append("")
     lines.append("## Cross-reference")
     lines.append("")
-    lines.append("- Full release pipeline plan: [`./RELEASE_PLAN.md`](./RELEASE_PLAN.md)")
     lines.append("- Catalogue inventory (auto-generated): [`vector-inventory.md`](vector-inventory.md)")
-    lines.append("- Harness README (V1/V2/V3): [`../../scripts/ipi/README.md`](../../scripts/ipi/README.md)")
-    lines.append("- arXiv preprint outline (Step 10): [`./arxiv-preprint-outline.md`](./arxiv-preprint-outline.md)")
+    lines.append("- Methodology: [`methodology.md`](methodology.md)")
+    lines.append("- Harness README: [`../scripts/ipi/README.md`](../scripts/ipi/README.md)")
     lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -306,7 +305,7 @@ def render_markdown(
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="build_scoreboard",
-        description="IPI Step 10 public scoreboard aggregator.",
+        description="IPI public scoreboard aggregator.",
     )
     p.add_argument(
         "--results-dir",

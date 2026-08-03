@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-run_test_matrix.py — the IPI-v2 catalogue test-matrix harness (PLAN §6 Step 7).
+run_test_matrix.py — the IPI-v2 catalogue test-matrix harness.
 
 Iterates each IPI-v2 vector × each configured model API, fires a
 probe prompt, captures the response, classifies the outcome, and
 writes the per-row result to a CSV in `scripts/ipi/results/`. The CSV
-is the data input that downstream vendor disclosure packets (Step 8)
+is the data input that the downstream vendor disclosure packets
 compile per-vendor private bundles from.
 
 ## Pipeline shape
@@ -18,7 +18,7 @@ compile per-vendor private bundles from.
                  ▼
     ┌──────────────────────────┐
     │ filter (channel/category │   (V1 tests text-testable vectors only —
-    │  /tier/id)               │    multimodal channels wait on PLAN §6 #7)
+    │  /tier/id)               │    multimodal channels wait on multimodal asset generation)
     └────────────┬─────────────┘
                  │
                  ▼
@@ -91,7 +91,7 @@ compile per-vendor private bundles from.
   which `.gitignore` excludes; raw model responses may include canary
   echoes and are treated as vendor-disclosure inputs, not public
   artefacts.
-- **No vendor names in commit messages.** Per Decision #5: the public
+- **No vendor names in commit messages.** The public
   catalog is vendor-agnostic; vendor names appear only in private
   disclosure packets.
 """
@@ -184,7 +184,7 @@ def load_catalog() -> list[Vector]:
 def text_testable(v: Vector) -> bool:
     """V1: text-only channels. Multimodal (Image / Audio / Video / PDF /
     ScreenshotOcr / McpResponse / ToolResult / EmbeddedEmail) waits on
-    PLAN §6 #7 (multimodal real-asset generation).
+    multimodal asset generation.
     """
     return "UrlOrText" in v.input_channels
 
@@ -228,7 +228,7 @@ PRIVATE_PAYLOADS_DIR = REPO_ROOT / "core" / "ipi-private-payloads"
 
 
 def load_harness_probe(vector_id: str) -> str | None:
-    """V3 (2026-05-20) — read `harness_probe` from the per-vector
+    """V3 — read `harness_probe` from the per-vector
     private YAML.
 
     Falls back to None (and the caller uses the V1 inline template) when
@@ -280,7 +280,7 @@ def substitute_canaries(text: str, c: Canaries) -> str:
 def build_probe(v: Vector, c: Canaries) -> str:
     """Probe template.
 
-    V3 (2026-05-20): when the per-vector private YAML in
+    V3: when the per-vector private YAML in
     `core/ipi-private-payloads/<id>.yaml` carries a `harness_probe`
     field, use it as the attacker-content slot. Removes the V1
     inline-catalog-signature problem (Claude was recognising
@@ -615,8 +615,8 @@ class AnthropicAdapter:
     `messages[0].content` carries the user-facing probe.
 
     Auth: requires `ANTHROPIC_API_KEY` env var. The model defaults to
-    `claude-sonnet-4-6` (the canonical scoreboard reference per
-    PLAN doc); override with `--anthropic-model`.
+    `claude-sonnet-4-6` (the canonical scoreboard reference);
+    override with `--anthropic-model`.
     """
 
     name = "claude"
@@ -679,7 +679,7 @@ class AnthropicAdapter:
 
 
 class OpenAIAdapter:
-    """Live OpenAI Chat Completions adapter (2026-05-20).
+    """Live OpenAI Chat Completions adapter.
 
     Auth: requires `OPENAI_API_KEY` env var. Default model
     `gpt-4o-2024-11-20` (canonical pinned snapshot for reproducibility;
@@ -740,17 +740,16 @@ class OpenAIAdapter:
 
 
 class GeminiAdapter:
-    """Live Google Gemini adapter (2026-05-20; fix 2026-05-21;
-    E2-fix-V2 2026-05-21).
+    """Live Google Gemini adapter.
 
     Auth: requires `GEMINI_API_KEY` env var (Google AI Studio key,
     starts with `AI...`). Default model `gemini-2.5-pro` (override with
     `--gemini-model`; `gemini-2.0-flash` for cheaper triage). Uses the
     `google-generativeai` SDK's GenerativeModel surface.
 
-    E2-fix (2026-05-21): The bare `resp.text` accessor raises when the
-    safety filter blocked the candidate (SAFETY / RECITATION / OTHER /
-    BLOCKLIST / PROHIBITED_CONTENT / SPII finish reasons), or when the
+    The bare `resp.text` accessor raises when the safety filter blocked
+    the candidate (SAFETY / RECITATION / OTHER / BLOCKLIST /
+    PROHIBITED_CONTENT / SPII finish reasons), or when the
     prompt itself was pre-blocked (`prompt_feedback.block_reason`). The
     V3 Critical run (`20260520T173415Z.csv`) hit this on 15/15 vectors —
     every row emitted as `status=error` with an opaque stack-trace
@@ -762,14 +761,14 @@ class GeminiAdapter:
     `STATUS_REFUSED` — vendor refused to generate counts as a refusal,
     not a transport error.
 
-    E2-fix-V2 (2026-05-21): The cross-vendor V3 Critical+High run
-    (`20260521T101344Z.csv`) emitted empty text on ALL 59 Gemini rows.
+    A later fix: one cross-vendor Critical+High run emitted empty text on
+    all 59 Gemini rows.
     Root cause: `gemini-2.5-pro` runs in thinking-mode by default and
-    consumes output-token budget on internal reasoning that is NOT
+    consumes output-token budget on internal reasoning that is not
     materialised in `candidate.content.parts`. With the previous
     512-token `max_output_tokens` cap, the model exhausted its budget
     on thinking and returned `finish_reason=MAX_TOKENS` with
-    `parts.count=0`. The E2-fix safety_filter detection didn't fire
+    `parts.count=0`. The safety_filter detection above didn't fire
     (MAX_TOKENS is not in `_SAFETY_FINISH_REASONS`), so rows landed in
     `status=inconclusive` with empty snippet — invisible data loss.
     V2 fixes:
@@ -850,7 +849,7 @@ class GeminiAdapter:
                 text="", latency_ms=latency_ms, error=f"safety_filter:{finish_name.lower()}"
             )
 
-        # Read parts before deciding on truncation: a MAX_TOKENS row CAN
+        # Read parts before deciding on truncation: a MAX_TOKENS row can
         # have partial text (model emitted some answer before hitting
         # the cap), in which case we want that text rather than an
         # error marker.
@@ -862,7 +861,7 @@ class GeminiAdapter:
             else ""
         )
 
-        # E2-fix-V2: MAX_TOKENS + empty parts is the thinking-exhaust
+        # MAX_TOKENS + empty parts is the thinking-exhaust
         # case — model burned its output budget on internal reasoning
         # and never emitted a visible answer Part. Surface it as a
         # measurable state instead of letting it look like a normal
@@ -885,11 +884,11 @@ class GeminiAdapter:
             resp = model.generate_content(
                 probe,
                 generation_config={
-                    # E2-fix-V2 (2026-05-21): 512 was too tight for
+                    # 512 was too tight for
                     # gemini-2.5-pro thinking-mode — model consumed the
                     # entire budget on internal reasoning, emitting
                     # MAX_TOKENS + empty parts on every IPI V3 probe.
-                    # 4096 leaves room for thinking AND a visible
+                    # 4096 leaves room for thinking and a visible
                     # answer. Cost impact is bounded by actual emitted
                     # tokens, not the cap.
                     "max_output_tokens": 4096,
@@ -905,7 +904,7 @@ class GeminiAdapter:
 
 
 class PerplexityAdapter:
-    """Live Perplexity adapter (2026-05-20).
+    """Live Perplexity adapter.
 
     Perplexity's API is OpenAI-compatible — same `chat.completions.create`
     shape, different `base_url`. Distinct from raw GPT calls because
@@ -967,7 +966,7 @@ class PerplexityAdapter:
 
 
 class MistralAdapter:
-    """Live Mistral adapter (2026-05-20).
+    """Live Mistral adapter.
 
     Auth: requires `MISTRAL_API_KEY` env var. Default model
     `mistral-large-latest` (override with `--mistral-model`; pin to a
@@ -1024,7 +1023,7 @@ class MistralAdapter:
             return AdapterResponse(text="", latency_ms=latency_ms, error=f"{kind}: {exc}")
 
 
-# Model registry — 2026-05-20: extended from {mock, claude}
+# Model registry: extended from {mock, claude}
 # baseline to a full 5-vendor matrix. Each adapter mirrors the
 # AdapterResponse contract; keep them stateless so a run is parallel-safe
 # (when --workers lands).
@@ -1056,7 +1055,7 @@ class RunRow:
     latency_ms: int
     error: str
     snippet: str
-    # V2 (2026-05-20) — LLM-as-judge columns. Empty strings when
+    # V2 — LLM-as-judge columns. Empty strings when
     # `--judge none`; otherwise populated by `ClaudeJudge.judge(...)`.
     judge_verdict: str = ""
     judge_confidence: float = 0.0
@@ -1133,7 +1132,7 @@ def filter_vectors(
     if dropped:
         sys.stderr.write(
             f"note: dropped {len(dropped)} multimodal-only vectors "
-            f"(V1 tests UrlOrText only; multimodal awaits PLAN §6 #7): "
+            f"(V1 tests UrlOrText only; multimodal awaits multimodal asset generation): "
             f"{[v.id for v in dropped]}\n"
         )
     return text_only
@@ -1166,7 +1165,7 @@ def run_matrix(
                 # transport failure — bucket to STATUS_REFUSED so it
                 # counts toward the resilience profile rather than being
                 # lost as `error`.
-                # output_truncated:<reason> is the E2-fix-V2 case (Gemini
+                # output_truncated:<reason> is the thinking-exhaust case (Gemini
                 # 2.5-pro thinking-mode burned the output budget on
                 # internal reasoning before producing a visible answer).
                 # The model engaged but emitted no answer — neither
@@ -1243,7 +1242,7 @@ def run_matrix(
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="run_test_matrix",
-        description="IPI-v2 test-matrix harness (PLAN §6 Step 7).",
+        description="IPI-v2 test-matrix harness.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument(

@@ -40,7 +40,7 @@
 //! This crate is the public taxonomy slice of the IPI project's
 //! IPI testbed. The private payload reproducers (per-vector
 //! `full_payload` + `reproducer_steps` + `internal_breakdown_
-//! justification`) live in an operator-side private store and are
+//! justification`) live in a maintainer-side private store and are
 //! authored only as part of coordinated disclosure cycles with
 //! affected vendors; they are not part of this public crate.
 
