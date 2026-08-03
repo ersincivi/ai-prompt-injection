@@ -1,0 +1,31 @@
+[package]
+name = "ipi-testbed"
+version = "0.1.0"
+edition = "2021"
+description = "IPI catalogue — public taxonomy + V3 testing harness. IPI (indirect prompt injection) measures base-model behavioural resilience under page-content directive framing."
+license = "Apache-2.0"
+repository = "https://github.com/ersincivi/ai-prompt-injection"
+readme = "../README.md"
+authors = ["the IPI project <a private security advisory on this repository>"]
+keywords = ["ai-safety", "prompt-injection", "consumer-protection", "llm", "security-research"]
+categories = ["development-tools", "command-line-utilities"]
+
+[lib]
+name = "ipi_testbed"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dump_ipi_catalog"
+path = "src/bin/dump_ipi_catalog.rs"
+
+[dependencies]
+# IPI catalog uses serde for the per-vector metadata structs and
+# serde_json for the JSON catalog dump emitted by dump_ipi_catalog.
+# These are the only external dependencies the public testbed needs.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

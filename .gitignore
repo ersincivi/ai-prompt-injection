@@ -1,0 +1,69 @@
+# ─── Private / sensitive ─────────────────────────────────────────
+# CRITICAL: never commit private payloads, secrets, run results or
+# disclosure-cycle artefacts. They are kept outside this repository
+# and MUST NOT appear here.
+
+# Private payload YAMLs (per-vector full_payload + reproducer +
+# internal_breakdown_justification; vendor disclosure prep material).
+# The PUBLIC catalog (taxonomy + signature only) lives in
+# core/src/airi/vectors.rs and is intentionally committed.
+core/airi-private-payloads/
+**/airi-private-payloads/
+
+# Disclosure packets (vendor-bound, embargoed).
+disclosure-packets/
+**/disclosure-packets/
+
+# Harness run CSV outputs (vendor + per-run sensitive identifiers).
+scripts/airi/results/
+**/airi/results/
+
+# Secrets / credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.asc
+secrets/
+credentials/
+
+# ─── Rust ─────────────────────────────────────────────────────────
+target/
+**/*.rs.bk
+Cargo.lock
+# (Cargo.lock is gitignored for library crates; commit if this becomes
+# a binary-only workspace.)
+
+# ─── Python ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
+
+# ─── OS / editor noise ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*~
+
+# ─── Build artefacts ──────────────────────────────────────────────
+dist/
+build/
+*.log
+
+# ─── AIRI-specific ────────────────────────────────────────────────
+# Local notes / draft files we may keep alongside the repo but not commit
+docs/notes/
+docs/Brainstorm/private/
+NOTES.local.md
+TODO.local.md
